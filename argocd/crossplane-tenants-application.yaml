@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: crossplane-tenants
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/rgunasekaran-github/homelab-gitops.git
+    targetRevision: main
+    path: crossplane-tenants
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: crossplane-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
