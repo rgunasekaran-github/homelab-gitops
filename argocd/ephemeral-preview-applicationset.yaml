@@ -1,0 +1,55 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: demo-preview
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+  - pullRequest:
+      github:
+        owner: rgunasekaran-github
+        repo: ephemeral-demo
+        tokenRef:
+          secretName: github-token-demo
+          key: token
+        labels:
+        - preview
+      requeueAfterSeconds: 60
+  template:
+    metadata:
+      name: "demo-pr-{{ .number }}"
+      annotations:
+        preview/url: "http://demo-pr-{{ .number }}.188.90.180.105.sslip.io"
+        notifications.argoproj.io/subscribe.on-preview-healthy.github: ""
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/rgunasekaran-github/ephemeral-demo.git
+        targetRevision: "{{ .head_sha }}"
+        path: helm/app
+        helm:
+          parameters:
+          - name: pr.number
+            value: "{{ .number }}"
+          - name: pr.branch
+            value: "{{ .branch }}"
+          - name: cosmos.databaseName
+            value: "pr-{{ .number }}-db"
+          - name: ingress.hostname
+            value: "demo-pr-{{ .number }}.188.90.180.105.sslip.io"
+          - name: image.tag
+            value: "{{ .head_sha }}"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "demo-pr-{{ .number }}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
+        managedNamespaceMetadata:
+          labels:
+            preview: "true"

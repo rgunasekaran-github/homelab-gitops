@@ -19,5 +19,8 @@ spec:
         failoverPriority: 0
     capabilities:
       - name: EnableServerless
+  writeConnectionSecretToRef:
+    name: homelab-cosmos-conn
+    namespace: crossplane-system
   providerConfigRef:
     name: default-azure
