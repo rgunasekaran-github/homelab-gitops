@@ -2,10 +2,12 @@ apiVersion: azure.upbound.io/v1beta1
 kind: ProviderConfig
 metadata:
   name: default-azure
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   credentials:
-    source: Secret
-    secretRef:
-      namespace: crossplane-system
-      name: azure-secret
-      key: creds
+    source: OIDCTokenFile
+    oidcTokenFilePath: /var/run/secrets/azure/tokens/azure-identity-token
+  clientID: "427c3ed0-ae45-4465-81a7-e3cd89e49093"
+  tenantID: "0d27d0e3-8779-4426-ba10-ed9d2b26175a"
+  subscriptionID: "3ce0ea6e-7d17-4004-8598-09d4d21d1555"

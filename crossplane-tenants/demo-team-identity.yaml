@@ -1,0 +1,14 @@
+apiVersion: platform.homelab.io/v1alpha1
+kind: TeamIdentityAzure
+metadata:
+  name: demo-team
+  namespace: crossplane-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  resourceGroupName: rg-ephemeral-demo
+  location: westeurope
+  oidcIssuerUrl: "https://westeurope.oic.prod-aks.azure.com/0d27d0e3-8779-4426-ba10-ed9d2b26175a/b065519a-6d6a-452e-aca9-123391559f16/"
+  serviceAccountNamespace: crossplane-system
+  serviceAccountName: crossplane-azure-provider
+  subscriptionId: "3ce0ea6e-7d17-4004-8598-09d4d21d1555"
