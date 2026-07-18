@@ -1,3 +1,7 @@
+deployment:
+  kong:
+    enabled: true
+
 # Ingress Controller Configuration
 ingressController:
   enabled: true
@@ -64,3 +68,37 @@ replicaCount: 1
 serviceAccount:
   create: true
   name: kong
+
+# Container-level resource definitions (REQUIRED by Gatekeeper)
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+# Autoscaling (disabled for homelab)
+autoscaling:
+  enabled: false
+
+# Pod Security Context
+securityContext: {}
+
+# Container Security Context
+containerSecurityContext:
+  readOnlyRootFilesystem: false
+  allowPrivilegeEscalation: false
+  runAsUser: 1000
+  runAsNonRoot: true
+
+# Update strategy
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+
+# Init containers resources (if any)
+migrations:
+  enabled: false  # Not needed in DB-less mode
