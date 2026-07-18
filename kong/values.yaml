@@ -1,0 +1,66 @@
+# Ingress Controller Configuration
+ingressController:
+  enabled: true
+  installCRDs: true
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+# Kong Gateway/Proxy Configuration
+proxy:
+  type: LoadBalancer
+
+  # HTTP and HTTPS ports
+  http:
+    enabled: true
+    servicePort: 80
+    containerPort: 8000
+
+  tls:
+    enabled: true
+    servicePort: 443
+    containerPort: 8443
+
+  # Minimal resources
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+# Admin API (for debugging and management)
+admin:
+  enabled: true
+  type: ClusterIP
+  http:
+    enabled: true
+    servicePort: 8001
+    containerPort: 8001
+
+# Enterprise features (disabled for OSS)
+enterprise:
+  enabled: false
+
+# Environment variables for Kong
+env:
+  database: "off"
+
+  # Logging
+  log_level: info
+
+  # Trust K3s internal IPs
+  trusted_ips: "0.0.0.0/0,::/0"
+
+replicaCount: 1
+
+# Service Account
+serviceAccount:
+  create: true
+  name: kong

@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kong-ingress-controller
+  namespace: argocd
+spec:
+  project: default
+
+  sources:
+    - repoURL: https://charts.konghq.com
+      chart: kong
+      targetRevision: 3.4.1
+      helm:
+        valueFiles:
+          - $values/kong/values.yaml
+
+    # Your GitOps repo for values
+    - repoURL: https://github.com/rgunasekaran-github/homelab-gitops.git
+      targetRevision: main
+      ref: values
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kong
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
