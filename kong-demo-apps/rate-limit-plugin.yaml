@@ -1,0 +1,9 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: rate-limit-5pm
+  namespace: kong-demo-apps
+config:
+  minute: 5
+  policy: local
+plugin: rate-limiting
