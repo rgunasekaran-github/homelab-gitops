@@ -22,12 +22,12 @@ proxy:
   # HTTP and HTTPS ports
   http:
     enabled: true
-    servicePort: 80
+    servicePort: 8080
     containerPort: 8000
 
   tls:
     enabled: true
-    servicePort: 443
+    servicePort: 8443
     containerPort: 8443
 
   # Minimal resources
