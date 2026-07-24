@@ -139,9 +139,6 @@ config:
 serviceAccount:
   create: true
 
-rbac:
-  create: true
-
 clusterRole:
   create: true
   rules:
@@ -166,7 +163,7 @@ clusterRole:
         - cronjobs
       verbs: ["get", "list", "watch"]
 
-env:
+extraEnvs:
   - name: K8S_NODE_NAME
     valueFrom:
       fieldRef:
