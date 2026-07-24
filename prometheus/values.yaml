@@ -42,6 +42,15 @@ prometheus:
         cpu: 1
         memory: 1Gi
 
+    # Config reloader sidecar resources
+    configReloaderResources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        cpu: 100m
+        memory: 64Mi
+
     # Scrape interval
     scrapeInterval: 30s
     evaluationInterval: 30s
@@ -69,6 +78,16 @@ alertmanager:
       limits:
         cpu: 100m
         memory: 128Mi
+
+  # Config Reloader sidecar Resources
+  configReloaderResources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
+
     storage:
       volumeClaimTemplate:
         spec:
