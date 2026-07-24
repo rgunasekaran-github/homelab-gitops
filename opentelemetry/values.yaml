@@ -85,7 +85,6 @@ config:
       detectors:
         - env
         - system
-        - kubernetes
       timeout: 5s
 
     k8sattributes:
