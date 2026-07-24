@@ -29,8 +29,8 @@ ports:
 
   metrics:
     enabled: true
-    containerPort: 8888
-    servicePort: 8888
+    containerPort: 8889
+    servicePort: 8889
     protocol: TCP
 
 config:
@@ -99,7 +99,7 @@ config:
 
   exporters:
     prometheus:
-      endpoint: 0.0.0.0:8888
+      endpoint: 0.0.0.0:8889
       namespace: otel
       const_labels:
         cluster: k3s-homelab
