@@ -82,7 +82,7 @@ grafana:
   enabled: false
 
 # Node Exporter - node-level metrics (CPU, memory, disk, network)
-nodeExporter:
+node-exporter:
   enabled: true
   resources:
     requests:
@@ -93,7 +93,7 @@ nodeExporter:
       memory: 50Mi
 
 # Kube State Metrics - K8s object metrics
-kubeStateMetrics:
+kube-state-metrics:
   enabled: true
   resources:
     requests:
