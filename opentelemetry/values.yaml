@@ -1,0 +1,173 @@
+---
+mode: deployment
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+service:
+  type: ClusterIP
+
+ports:
+  otlp:
+    enabled: true
+    containerPort: 4317
+    servicePort: 4317
+    protocol: TCP
+
+  otlp-http:
+    enabled: true
+    containerPort: 4318
+    servicePort: 4318
+    protocol: TCP
+
+  metrics:
+    enabled: true
+    containerPort: 8888
+    servicePort: 8888
+    protocol: TCP
+
+config:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+
+    prometheus:
+      config:
+        scrape_configs:
+          - job_name: 'otel-collector'
+            scrape_interval: 30s
+            static_configs:
+              - targets: ['localhost:8888']
+
+    k8s_cluster:
+      auth_type: serviceAccount
+      node_conditions_to_report:
+        - Ready
+        - MemoryPressure
+        - DiskPressure
+        - PIDPressure
+      allocatable_types_to_report:
+        - cpu
+        - memory
+        - storage
+
+    kubeletstats:
+      auth_type: serviceAccount
+      endpoint: https://${env:K8S_NODE_NAME}:10250
+      insecure_skip_verify: true
+      metric_groups:
+        - node
+        - pod
+        - container
+
+  processors:
+    batch:
+      timeout: 10s
+      send_batch_size: 1024
+
+    memory_limiter:
+      check_interval: 1s
+      limit_mib: 400
+      spike_limit_mib: 100
+
+    resourcedetection:
+      detectors:
+        - env
+        - system
+        - kubernetes
+      timeout: 5s
+
+    k8sattributes:
+      auth_type: serviceAccount
+      passthrough: false
+      extract:
+        metadata:
+          - k8s.namespace.name
+          - k8s.deployment.name
+          - k8s.pod.name
+          - k8s.node.name
+
+  exporters:
+    prometheus:
+      endpoint: 0.0.0.0:8888
+      namespace: otel
+      const_labels:
+        cluster: k3s-homelab
+
+    prometheusremotewrite:
+      endpoint: http://prometheus-kube-prometheus-prometheus.prometheus.svc.cluster.local:9090/api/v1/write
+      tls:
+        insecure: true
+
+    logging:
+      loglevel: info
+
+  service:
+    pipelines:
+      traces:
+        receivers: [otlp]
+        processors: [memory_limiter, batch, resourcedetection, k8sattributes]
+        exporters: [logging]
+
+      metrics:
+        receivers: [otlp, prometheus, k8s_cluster, kubeletstats]
+        processors: [memory_limiter, batch, resourcedetection]
+        exporters: [prometheus, prometheusremotewrite]
+
+      logs:
+        receivers: [otlp]
+        processors: [memory_limiter, batch, resourcedetection, k8sattributes]
+        exporters: [logging]
+
+    telemetry:
+      logs:
+        level: info
+      metrics:
+        address: 0.0.0.0:8888
+
+serviceAccount:
+  create: true
+
+rbac:
+  create: true
+
+clusterRole:
+  create: true
+  rules:
+    - apiGroups: [""]
+      resources:
+        - events
+        - namespaces
+        - nodes
+        - nodes/stats
+        - pods
+        - services
+      verbs: ["get", "list", "watch"]
+    - apiGroups: ["apps"]
+      resources:
+        - daemonsets
+        - deployments
+        - statefulsets
+      verbs: ["get", "list", "watch"]
+    - apiGroups: ["batch"]
+      resources:
+        - jobs
+        - cronjobs
+      verbs: ["get", "list", "watch"]
+
+env:
+  - name: K8S_NODE_NAME
+    valueFrom:
+      fieldRef:
+        fieldPath: spec.nodeName

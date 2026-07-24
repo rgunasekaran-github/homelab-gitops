@@ -1,0 +1,164 @@
+# Grafana configuration for K3s Homelab
+# Includes pre-loaded K8s dashboards and Prometheus datasource
+
+# Admin credentials - CHANGE THESE!
+adminUser: admin
+
+# Use existing secret for password (created by external-secrets)
+admin:
+  existingSecret: grafana-admin-secret
+  userKey: admin-user
+  passwordKey: admin-password
+
+# Persistence
+persistence:
+  enabled: true
+  size: 2Gi
+  accessModes:
+    - ReadWriteOnce
+
+# Resources
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+
+# Ingress (optional - configure based on your setup)
+ingress:
+  enabled: true
+  ingressClassName: traefik  # K3s default
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  hosts:
+    - grafana.homelab.local
+  # Uncomment if you have cert-manager
+  # tls:
+  #   - secretName: grafana-tls
+  #     hosts:
+  #       - grafana.homelab.local
+
+# Datasources - Auto-configure Prometheus
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        url: http://prometheus-kube-prometheus-prometheus.prometheus.svc.cluster.local:9090
+        access: proxy
+        isDefault: true
+        jsonData:
+          timeInterval: 30s
+
+      - name: AlertManager
+        type: alertmanager
+        url: http://prometheus-kube-prometheus-alertmanager.prometheus.svc.cluster.local:9093
+        access: proxy
+
+# Dashboard providers
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/default
+
+      - name: 'kubernetes'
+        orgId: 1
+        folder: 'Kubernetes'
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/kubernetes
+
+      - name: 'observability'
+        orgId: 1
+        folder: 'Observability'
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/observability
+
+# Pre-configured dashboards from Grafana.com
+dashboards:
+  kubernetes:
+    # Kubernetes cluster monitoring
+    k8s-cluster-summary:
+      gnetId: 7249
+      revision: 1
+      datasource: Prometheus
+
+    # Node Exporter full dashboard
+    node-exporter-full:
+      gnetId: 1860
+      revision: 31
+      datasource: Prometheus
+
+    # Kubernetes cluster monitoring (Prometheus)
+    k8s-cluster-monitoring:
+      gnetId: 3119
+      revision: 2
+      datasource: Prometheus
+
+    # Kubernetes pod resources
+    k8s-pod-resources:
+      gnetId: 6417
+      revision: 1
+      datasource: Prometheus
+
+    # Kubernetes deployment metrics
+    k8s-deployment-statefulset:
+      gnetId: 8588
+      revision: 1
+      datasource: Prometheus
+
+  observability:
+    # Prometheus stats
+    prometheus-stats:
+      gnetId: 2
+      revision: 2
+      datasource: Prometheus
+
+    # AlertManager dashboard
+    alertmanager:
+      gnetId: 9578
+      revision: 4
+      datasource: Prometheus
+
+    # OpenTelemetry Collector
+    otel-collector:
+      gnetId: 15983
+      revision: 2
+      datasource: Prometheus
+
+# Useful plugins
+plugins:
+  - grafana-piechart-panel
+  - grafana-clock-panel
+
+# Environment variables
+env:
+  GF_EXPLORE_ENABLED: "true"
+  GF_SECURITY_ALLOW_EMBEDDING: "true"
+  GF_AUTH_ANONYMOUS_ENABLED: "false"
+  GF_USERS_ALLOW_SIGN_UP: "false"
+
+# Enable alerting
+alerting:
+  enabled: true

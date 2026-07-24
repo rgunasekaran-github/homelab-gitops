@@ -1,0 +1,133 @@
+# Balanced Prometheus Stack for K3s Homelab
+# Includes: Prometheus, AlertManager, Node Exporter, Kube-state-metrics
+# Resources: ~800Mi requests, ~1.5Gi limits
+
+fullnameOverride: prometheus
+
+# Prometheus Operator
+prometheusOperator:
+  enabled: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# Prometheus Server
+prometheus:
+  enabled: true
+
+  prometheusSpec:
+    # 10-day retention
+    retention: 10d
+    retentionSize: "8GB"
+
+    # Storage
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+
+    # Resource limits
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 1
+        memory: 1Gi
+
+    # Scrape interval
+    scrapeInterval: 30s
+    evaluationInterval: 30s
+
+    # Auto-discover ServiceMonitors and PodMonitors
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+
+    # Scrape OpenTelemetry Collector
+    additionalScrapeConfigs:
+      - job_name: 'opentelemetry-collector'
+        static_configs:
+          - targets: ['opentelemetry-collector.opentelemetry.svc.cluster.local:8888']
+            labels:
+              component: 'otel-collector'
+
+# AlertManager - for alerting
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+    storage:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 2Gi
+
+# Grafana - disabled (deploying separately)
+grafana:
+  enabled: false
+
+# Node Exporter - node-level metrics (CPU, memory, disk, network)
+nodeExporter:
+  enabled: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 30Mi
+    limits:
+      cpu: 200m
+      memory: 50Mi
+
+# Kube State Metrics - K8s object metrics
+kubeStateMetrics:
+  enabled: true
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+# Prometheus Operator default rules
+defaultRules:
+  create: true
+  rules:
+    alertmanager: true
+    etcd: false  # K3s uses SQLite
+    configReloaders: true
+    general: true
+    k8s: true
+    kubeApiserver: true
+    kubeApiserverAvailability: true
+    kubeApiserverSlos: true
+    kubelet: true
+    kubeProxy: true
+    kubePrometheusGeneral: true
+    kubePrometheusNodeRecording: true
+    kubernetesApps: true
+    kubernetesResources: true
+    kubernetesStorage: true
+    kubernetesSystem: true
+    kubeScheduler: false  # K3s doesn't expose scheduler metrics by default
+    kubeStateMetrics: true
+    network: true
+    node: true
+    nodeExporterAlerting: true
+    nodeExporterRecording: true
+    prometheus: true
+    prometheusOperator: true
