@@ -12,7 +12,7 @@ config:
     filename: /tmp/positions.yaml
 
   snippets:
-    scrapeConfigs:
+    scrapeConfigs: |
       - job_name: kubernetes-pods
         pipeline_stages:
           - cri: {}
