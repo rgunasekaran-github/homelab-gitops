@@ -76,7 +76,7 @@ datasources:
       - name: Tempo
         type: tempo
         uid: tempo
-        url: http://tempo-gateway.tempo.svc.cluster.local
+        url: http://tempo.tempo.svc.cluster.local:3100
         access: proxy
         jsonData:
           tracesToLogsV2:
