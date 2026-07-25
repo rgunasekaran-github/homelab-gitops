@@ -1,30 +1,10 @@
 # Tempo config for k3s Homelab
 # Monolithic mode for distributed tracing
 
+replicas: 1
+
+# Resources for Tempo pod
 tempo:
-  retention: 168h
-
-  storage:
-    trace:
-      backend: local
-      local:
-        path: /var/tempo/traces
-
-  search_enabled: true
-
-  metrics_generator:
-    enabled: true
-    storage:
-      path: /var/tempo/wal
-
-  compactor:
-    compaction:
-      block_retention: 168h
-deploymentMode: SingleBinary
-
-singleBinary:
-  replicas: 1
-
   resources:
     requests:
       cpu: 100m
@@ -33,48 +13,44 @@ singleBinary:
       cpu: 500m
       memory: 512Mi
 
-  persistence:
+  # Retention period
+  retention: 168h
+
+  # Storage configuration
+  storage:
+    trace:
+      backend: local
+      local:
+        path: /var/tempo/traces
+      wal:
+        path: /var/tempo/wal
+
+  # Enable metrics generator
+  metricsGenerator:
     enabled: true
-    size: 10Gi
+    remoteWriteUrl: "http://prometheus-prometheus.prometheus.svc.cluster.local:9090/api/v1/write"
+    storage:
+      path: /var/tempo/metrics
+    traces_storage:
+      path: /var/tempo/wal
 
-distributor:
-  replicas: 0
-ingester:
-  replicas: 0
-querier:
-  replicas: 0
-queryFrontend:
-  replicas: 0
-compactor:
-  replicas: 0
-metricsGenerator:
-  replicas: 0
+  # Receivers configuration (OTLP only)
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: "0.0.0.0:4317"
+        http:
+          endpoint: "0.0.0.0:4318"
+    jaeger: null # Disable Jaeger
+    opencensus: null # Disable OpenCensus
 
-gateway:
+# Enable persistence
+persistence:
   enabled: true
-  replicas: 1
-  resources:
-    requests:
-      cpu: 50m
-      memory: 64Mi
-    limits:
-      cpu: 100m
-      memory: 128Mi
+  size: 10Gi
+  accessModes:
+    - ReadWriteOnce
 
 service:
   type: ClusterIP
-
-traces:
-  otlp:
-    grpc:
-      enabled: true
-      endpoint: "0.0.0.0:4317"
-    http:
-      enabled: true
-      endpoint: "0.0.0.0:4318"
-
-  jaeger:
-    thriftHttp:
-      enabled: false
-  zipkin:
-    enabled: false
