@@ -1,0 +1,80 @@
+# Tempo config for k3s Homelab
+# Monolithic mode for distributed tracing
+
+tempo:
+  retention: 168h
+
+  storage:
+    trace:
+      backend: local
+      local:
+        path: /var/tempo/traces
+
+  search_enabled: true
+
+  metrics_generator:
+    enabled: true
+    storage:
+      path: /var/tempo/wal
+
+  compactor:
+    compaction:
+      block_retention: 168h
+deploymentMode: SingleBinary
+
+singleBinary:
+  replicas: 1
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  persistence:
+    enabled: true
+    size: 10Gi
+
+distributor:
+  replicas: 0
+ingester:
+  replicas: 0
+querier:
+  replicas: 0
+queryFrontend:
+  replicas: 0
+compactor:
+  replicas: 0
+metricsGenerator:
+  replicas: 0
+
+gateway:
+  enabled: true
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+service:
+  type: ClusterIP
+
+traces:
+  otlp:
+    grpc:
+      enabled: true
+      endpoint: "0.0.0.0:4317"
+    http:
+      enabled: true
+      endpoint: "0.0.0.0:4318"
+
+  jaeger:
+    thriftHttp:
+      enabled: false
+  zipkin:
+    enabled: false
