@@ -109,6 +109,11 @@ config:
       tls:
         insecure: true
 
+    otlp/tempo:
+      endpoint: tempo.tempo.svc.cluster.local:4317
+      tls:
+        insecure: true
+
     logging:
       loglevel: info
 
@@ -117,7 +122,7 @@ config:
       traces:
         receivers: [otlp]
         processors: [memory_limiter, batch, resourcedetection, k8sattributes]
-        exporters: [logging]
+        exporters: [otlp/tempo, logging]
 
       metrics:
         receivers: [otlp, prometheus, k8s_cluster, kubeletstats]
